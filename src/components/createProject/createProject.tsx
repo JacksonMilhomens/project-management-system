@@ -32,9 +32,9 @@ export default function CreateProjectForm() {
         department: '',
         requester: '',
         description: '',
-        goal: 'test',
+        goal: '',
         impactsStakeholders: false,
-        complexity: 'High',
+        complexity: 'Medium',
         monthlyRequests: 0,
         averageTimeSpent: 0,
         requestDate: undefined
@@ -50,10 +50,10 @@ export default function CreateProjectForm() {
     }
 
     // Função para lidar com mudanças nos selects
-    const handleSelectChange = (value: string, field: keyof ProjectData) => {
+    const handleSelectChange = (value: string | boolean, field: keyof ProjectData) => {
         setFormData(prev => ({
             ...prev,
-            [field]: field === 'impactsStakeholders' ? value === 'true' : value
+            [field]: field === 'impactsStakeholders' ? value === true : value
         }))
     }
 
@@ -73,17 +73,22 @@ export default function CreateProjectForm() {
             const response = await fetch('https://project-management-wobh.onrender.com/project', {
                 method: 'POST',
                 headers: {
-                    'Accept': '*/*',
+                    'Accept': '*/*',    
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify(formData)
+                body: JSON.stringify({
+                    ...formData,
+                    monthlyRequests: Number(formData.monthlyRequests),
+                    averageTimeSpent: Number(formData.averageTimeSpent),
+                    impactsStakeholders: formData.impactsStakeholders,
+                })
             })
 
-            if (!response.ok) {
-                const data = await response.json()
-                console.log(data)
-                throw new Error('Erro ao criar projeto')
-            }
+            // if (!response.ok) {
+            //     const data = await response.json()
+            //     console.log(data)
+            //     throw new Error('Erro ao criar projeto')
+            // }
 
             const data = await response.json()
             console.log('Projeto criado com sucesso:', data)
