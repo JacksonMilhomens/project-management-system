@@ -31,6 +31,7 @@ import { Checkbox } from './components/ui/checkbox';
 import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from './components/ui/dropdown-menu';
 import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogOverlay } from './components/ui/alert-dialog';
 import { AlertDialogAction, AlertDialogCancel, AlertDialogTitle, AlertDialogTrigger } from '@radix-ui/react-alert-dialog';
+import CreateProjectForm from './components/createProject/createProject';
 
 
 export type Project = {
@@ -53,6 +54,19 @@ export type Project = {
   requestDate: Date,
   // createdAt: Date,
   // updatedAt: Date
+}
+
+interface CreateProject {
+  name: string
+  department: string
+  requester: string
+  description: string
+  objective: string
+  impactsStakeholders: boolean
+  complexity: 'High' | 'Medium' | 'Low'
+  monthlyRequests: number
+  averageTime: number
+  requestDate: Date | undefined
 }
 
 export function App() {
@@ -347,7 +361,7 @@ export function App() {
         <div className="flex items-center py-4">
 
         {/* <div className='flex items-center justify-between'> */}
-          <Dialog>
+          {/* <Dialog>
             <DialogTrigger asChild>
               <Button>
                 <PlusCircle className='w-4 h-4 mr-2'/>
@@ -473,7 +487,8 @@ export function App() {
             </form>
 
             </DialogContent>
-          </Dialog>
+          </Dialog> */}
+          <CreateProjectForm/>
         {/* </div> */}
           
           <Input
