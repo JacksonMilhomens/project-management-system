@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ArrowUpDown, ChevronDown, MoreHorizontal, PlusCircle } from 'lucide-react';
+import { ArrowUpDown, ChevronDown, MoreHorizontal, PlusCircle, Trash2, Eye  } from 'lucide-react';
 import { Button } from './components/ui/button';
 import { Table, TableHead, TableHeader, TableBody, TableRow, TableCell } from './components/ui/table';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger,  } from './components/ui/dialog';
@@ -32,6 +32,7 @@ import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMe
 import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogOverlay } from './components/ui/alert-dialog';
 import { AlertDialogAction, AlertDialogCancel, AlertDialogTitle, AlertDialogTrigger } from '@radix-ui/react-alert-dialog';
 import CreateProjectForm from './components/createProject/createProject';
+import { Separator } from './components/ui/separator';
 
 
 export type Project = {
@@ -249,56 +250,100 @@ export function App() {
     },
     {
       id: "actions",
+      header: "Ações",
       enableHiding: false,
       cell: ({ row }) => {
         const project = row.original
-   
-        return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-8 w-8 p-0">
-                <span className="sr-only">Open menu</span>
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-          
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Ações</DropdownMenuLabel>
-              {/* <DropdownMenuItem
-                onClick={() => navigator.clipboard.writeText(project.id)}
-              >
-                Copy payment ID
-              </DropdownMenuItem> */}
-  
-              <DropdownMenuSeparator />
-  
-              <DropdownMenuItem>Visualizar</DropdownMenuItem>
-              
-              <AlertDialog>
 
-                <AlertDialogTrigger asChild>
-                  <DropdownMenuItem>Excluir</DropdownMenuItem>
-                </AlertDialogTrigger>
-  
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Você tem certeza que deseja excluir este projeto?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      Esta ação não poderá ser desfeita.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-  
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                    <AlertDialogAction>Confirmar</AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-  
-            </DropdownMenuContent>
-          
-          </DropdownMenu>
+        const handleDelete = async () => {
+          try {
+            const response = await fetch(`https://project-management-wobh.onrender.com/project/${project.id}`, {
+              method: 'DELETE',
+            });
+      
+            if (response.ok) {
+              // Se a resposta for bem-sucedida, faça algo como atualizar a lista de projetos
+              deleteProjectFromList(project.id)
+              
+              // alert('Projeto deletado com sucesso!');
+              // Aqui você pode atualizar o estado da lista de projetos, se necessário
+            } else {
+              // Caso ocorra um erro na requisição
+              alert('Erro ao deletar o projeto.');
+            }
+          } catch (error) {
+            // Caso haja algum erro na requisição
+            alert('Erro ao realizar a requisição de exclusão.');
+            console.error(error);
+          }
+        };
+
+        return (
+          <div className="flex items-center">
+            <Button variant="ghost" className="h-8 w-8 p-0">
+              <Eye className="h-4 w-4"></Eye>
+            </Button>
+
+            <Separator className='h-5' orientation='vertical'/>
+
+            <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="ghost" className="h-8 w-8 p-0">
+                <Trash2 className="h-4 w-4"></Trash2>
+              </Button>
+            </AlertDialogTrigger>
+
+
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Você tem certeza que deseja excluir este projeto?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Esta ação não poderá ser desfeita.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                <AlertDialogAction className="bg-red-600 text-white hover:bg-red-700" onClick={handleDelete}>Confirmar</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+          </div>
         )
+
+        // return (
+        //   <DropdownMenu>
+        //     <DropdownMenuTrigger asChild>
+        //       <Button variant="ghost" className="h-8 w-8 p-0">
+        //         <span className="sr-only">Open menu</span>
+        //         <MoreHorizontal className="h-4 w-4" />
+        //       </Button>
+        //     </DropdownMenuTrigger>
+          
+        //     <DropdownMenuContent align="end">
+        //       <DropdownMenuLabel>Ações</DropdownMenuLabel>
+        //       <DropdownMenuSeparator />
+        //       <DropdownMenuItem>Visualizar</DropdownMenuItem>
+        //       <AlertDialog>
+        //         <AlertDialogTrigger asChild>
+        //           <DropdownMenuItem>Excluir</DropdownMenuItem>
+        //         </AlertDialogTrigger>
+        //         <AlertDialogContent>
+        //           <AlertDialogHeader>
+        //             <AlertDialogTitle>Você tem certeza que deseja excluir este projeto?</AlertDialogTitle>
+        //             <AlertDialogDescription>
+        //               Esta ação não poderá ser desfeita.
+        //             </AlertDialogDescription>
+        //           </AlertDialogHeader>
+        //           <AlertDialogFooter>
+        //             <AlertDialogCancel>Cancelar</AlertDialogCancel>
+        //             <AlertDialogAction>Confirmar</AlertDialogAction>
+        //           </AlertDialogFooter>
+        //         </AlertDialogContent>
+        //       </AlertDialog>
+        //     </DropdownMenuContent>
+        //   </DropdownMenu>
+        // )
       },
     },
   ]
@@ -334,6 +379,10 @@ export function App() {
     },
   })
 
+  const deleteProjectFromList = (projectId: string) => {
+    setData((prevProjects) => prevProjects.filter((project: Project) => project.id !== projectId));
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -360,7 +409,7 @@ export function App() {
       <div className="w-full">
         <div className="flex items-center py-4">
 
-        {/* <div className='flex items-center justify-between'> */}
+        <div className='flex items-center justify-between'>
           {/* <Dialog>
             <DialogTrigger asChild>
               <Button>
@@ -489,7 +538,7 @@ export function App() {
             </DialogContent>
           </Dialog> */}
           <CreateProjectForm/>
-        {/* </div> */}
+        </div>
           
           <Input
             placeholder="Filtrar projetos..."

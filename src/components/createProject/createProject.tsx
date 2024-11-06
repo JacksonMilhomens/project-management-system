@@ -1,17 +1,16 @@
-import { Dialog, DialogClose, DialogContent, DialogDescription, DialogTitle, DialogTrigger } from "@radix-ui/react-dialog"
-import { Calendar as CalendarIcon } from "lucide-react"
-import { PlusCircle } from "lucide-react"
-import { useState } from "react"
-import { Button } from "../ui/button"
-import { DialogFooter, DialogHeader } from "../ui/dialog"
-import { Label } from "@radix-ui/react-label"
 import { cn } from "@/lib/utils"
-import { Popover, PopoverTrigger, PopoverContent } from "@radix-ui/react-popover"
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@radix-ui/react-select"
+import { PlusCircle } from "lucide-react"
+import { format } from "date-fns"
+import { Calendar as CalendarIcon } from "lucide-react"
+import { useState } from "react"
+import { DialogHeader, DialogFooter, Dialog, DialogTrigger, DialogContent, DialogTitle, DialogDescription, DialogClose } from "../ui/dialog"
 import { Input } from "../ui/input"
 import { Textarea } from "../ui/textarea"
-import { format } from "date-fns"
-import { Calendar } from '../ui/calendar';
+import { Label } from "../ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select"
+import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover"
+import { Button } from "../ui/button"
+import { Calendar } from "../ui/calendar"
 
 interface ProjectData {
     name: string
@@ -81,6 +80,8 @@ export default function CreateProjectForm() {
             })
 
             if (!response.ok) {
+                const data = await response.json()
+                console.log(data)
                 throw new Error('Erro ao criar projeto')
             }
 
@@ -108,6 +109,7 @@ export default function CreateProjectForm() {
     }
 
     return (
+        // <div className='flex items-center justify-between'>
         <Dialog>
             <DialogTrigger asChild>
                 <Button>
@@ -209,7 +211,7 @@ export default function CreateProjectForm() {
                         <Popover>
                             <PopoverTrigger asChild>
                                 <Button
-                                      variant={"outline"}
+                                    variant={"outline"}
                                     className={cn(
                                         "col-span-3 justify-start text-left font-normal",
                                         !date && "text-muted-foreground"
@@ -242,5 +244,6 @@ export default function CreateProjectForm() {
 
             </DialogContent>
         </Dialog>
+        // </div>
     )
 }
