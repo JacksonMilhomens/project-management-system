@@ -22,7 +22,7 @@ interface ProjectData {
     complexity: 'High' | 'Medium' | 'Low'
     monthlyRequests: number
     averageTimeSpent: number
-    requestDate: Date | undefined
+    requestDate: Date | undefined | string
 }
 
 export default function CreateProjectForm() {
@@ -66,16 +66,20 @@ export default function CreateProjectForm() {
 
     // Função para lidar com mudança de data
     const handleDateChange = (newDate: Date | undefined) => {
+        console.log('Alterando a data')
         setDate(newDate)
         setFormData(prev => ({
             ...prev,
-            requestDate: newDate
+            requestDate: newDate?.toISOString()
         }))
     }
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
+        
         console.log(formData)
+
+        // formData['requestDate'] = formData.requestDate ? new Date(formData.requestDate).toISOString() : formData.requestDate
         try {
             const response = await fetch('https://project-management-wobh.onrender.com/project', {
                 method: 'POST',
@@ -86,13 +90,14 @@ export default function CreateProjectForm() {
 
                 body: JSON.stringify(formData)
             })
+
             if (!response.ok) {
                 const data = await response.json()
                 console.log(data)
                 throw new Error('Erro ao criar projeto')
             }
 
-            const data = await response.json()
+            const data = await response.text()
             console.log('Projeto criado com sucesso:', data)
 
             // Limpando a parada depois de dar o post
@@ -106,7 +111,7 @@ export default function CreateProjectForm() {
                 complexity: 'Medium',
                 monthlyRequests: 0,
                 averageTimeSpent: 0,
-                requestDate: undefined
+                requestDate: ''
             })
             setDate(undefined)
 
@@ -134,31 +139,31 @@ export default function CreateProjectForm() {
                 <form className='space-y-4' onSubmit={handleSubmit}>
                     <div className='grid grid-cols-4 items-center text-right gap-3'>
                         <Label htmlFor='name'>Projeto</Label>
-                        <Input className='col-span-3' id='name' value={formData.name}
+                        <Input required className='col-span-3' id='name' value={formData.name}
                             onChange={handleInputChange} placeholder='Nome do projeto'></Input>
                     </div>
 
                     <div className='grid grid-cols-4 items-center text-right gap-3'>
                         <Label htmlFor='department'>Departamento</Label>
-                        <Input className='col-span-3' id='department' value={formData.department}
+                        <Input required className='col-span-3' id='department' value={formData.department}
                             onChange={handleInputChange} placeholder='Nome do departamento'></Input>
                     </div>
 
                     <div className='grid grid-cols-4 items-center text-right gap-3'>
                         <Label htmlFor='requester'>Solicitante</Label>
-                        <Input className='col-span-3' id='requester' value={formData.requester}
+                        <Input required className='col-span-3' id='requester' value={formData.requester}
                             onChange={handleInputChange} placeholder='Nome do solicitante'></Input>
                     </div>
 
                     <div className='grid grid-cols-4 items-center text-right gap-3'>
                         <Label htmlFor='description'>Descrição</Label>
-                        <Textarea placeholder='Descreva o seu projeto' id='description' value={formData.description}
+                        <Textarea required placeholder='Descreva o seu projeto' id='description' value={formData.description}
                             onChange={handleInputChange} className='col-span-3' />
                     </div>
 
                     <div className='grid grid-cols-4 items-center text-right gap-3'>
                         <Label htmlFor='goal'>Objetivo</Label>
-                        <Select onValueChange={(value) => handleSelectChange(value, 'goal')}>
+                        <Select required onValueChange={(value) => handleSelectChange(value, 'goal')}>
                             <SelectTrigger className="col-span-3">
                                 <SelectValue placeholder='Selecione o objetivo do projeto' />
                             </SelectTrigger>
@@ -173,7 +178,7 @@ export default function CreateProjectForm() {
 
                     <div className='grid grid-cols-4 items-center text-right gap-3'>
                         <Label htmlFor='impactStakeholders'>Impacta Stakeholders</Label>
-                        <Select onValueChange={(value) => handleSelectChange(value, 'impactStakeholders')}>
+                        <Select required onValueChange={(value) => handleSelectChange(value, 'impactStakeholders')}>
                             <SelectTrigger className="col-span-3">
                                 <SelectValue placeholder='O projeto impacta clientes e/ou parceiros' />
                             </SelectTrigger>
@@ -187,7 +192,7 @@ export default function CreateProjectForm() {
 
                     <div className='grid grid-cols-4 items-center text-right gap-3'>
                         <Label htmlFor='complexity'>Complexidade</Label>
-                        <Select onValueChange={(value) => handleSelectChange(value, 'complexity')}>
+                        <Select required onValueChange={(value) => handleSelectChange(value, 'complexity')}>
                             <SelectTrigger className="col-span-3">
                                 <SelectValue placeholder='Qual a complexidade do projeto?' />
                             </SelectTrigger>
@@ -202,20 +207,20 @@ export default function CreateProjectForm() {
 
                     <div className='grid grid-cols-4 items-center text-right gap-3'>
                         <Label htmlFor='monthlyRequests'>Número de Solicitações Mensais</Label>
-                        <Input className='col-span-3' id='monthlyRequests' type='number' value={formData.monthlyRequests}
+                        <Input required className='col-span-3' id='monthlyRequests' type='number' value={formData.monthlyRequests}
                             onChange={handleInputChange} placeholder='Número de solicitações mensais recebidas'></Input>
                     </div>
 
                     <div className='grid grid-cols-4 items-center text-right gap-3'>
                         <Label htmlFor='averageTimeSpent'>Tempo Médio Gasto</Label>
-                        <Input className='col-span-3' id='averageTimeSpent' type="number"
+                        <Input required className='col-span-3' id='averageTimeSpent' type="number"
                             value={formData.averageTimeSpent}
                             onChange={handleInputChange} placeholder='Tempo médio gasto em minutos'></Input>
                     </div>
 
                     <div className='grid grid-cols-4 items-center text-right gap-3'>
-                        <Label htmlFor='name'>Data da Solicitação</Label>
-                        <Popover>
+                        <Label htmlFor='requestDate'>Data da Solicitação</Label>
+                        <Popover >
                             <PopoverTrigger asChild>
                                 <Button
                                     variant={"outline"}
@@ -228,11 +233,17 @@ export default function CreateProjectForm() {
                                     {date ? format(date, "PPP") : <span>Data da solicitação</span>}
                                 </Button>
                             </PopoverTrigger>
+
                             <PopoverContent className="w-auto p-0">
                                 <Calendar
+                                    required
                                     mode="single"
+                                    id="requestDate"
                                     selected={date}
                                     onSelect={handleDateChange}
+                                    disabled={(date) =>
+                                        date > new Date() || date < new Date("1900-01-01")
+                                    }
                                     initialFocus
                                 />
                             </PopoverContent>
