@@ -13,12 +13,12 @@ import { Button } from "../ui/button"
 import { Calendar } from "../ui/calendar"
 
 interface ProjectData {
-    name: string
+    name: string;
     department: string
     requester: string
     description: string
     goal: string
-    impactsStakeholders: boolean
+    impactStakeholders: boolean
     complexity: 'High' | 'Medium' | 'Low'
     monthlyRequests: number
     averageTimeSpent: number
@@ -33,7 +33,7 @@ export default function CreateProjectForm() {
         requester: '',
         description: '',
         goal: '',
-        impactsStakeholders: false,
+        impactStakeholders: false,
         complexity: 'Medium',
         monthlyRequests: 0,
         averageTimeSpent: 0,
@@ -42,18 +42,25 @@ export default function CreateProjectForm() {
 
     // Função para lidar com mudanças nos inputs de texto
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-        const { id, value } = e.target
+        const { id, value, type } = e.target
+        console.log(value)
         setFormData(prev => ({
             ...prev,
-            [id]: value
+            [id]: type === 'number' ? Number(value) : value
         }))
     }
 
     // Função para lidar com mudanças nos selects
     const handleSelectChange = (value: string | boolean, field: keyof ProjectData) => {
+        if (value === 'true') {
+            value = true
+        }
+        if (value === 'false') {
+            value = false
+        }
         setFormData(prev => ({
             ...prev,
-            [field]: field === 'impactsStakeholders' ? value === true : value
+            [field]: value
         }))
     }
 
@@ -68,7 +75,7 @@ export default function CreateProjectForm() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
-        console.log(formData);
+        console.log(formData)
         try {
             const response = await fetch('https://project-management-wobh.onrender.com/project', {
                 method: 'POST',
@@ -76,19 +83,14 @@ export default function CreateProjectForm() {
                     'Accept': '*/*',    
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({
-                    ...formData,
-                    monthlyRequests: Number(formData.monthlyRequests),
-                    averageTimeSpent: Number(formData.averageTimeSpent),
-                    impactsStakeholders: formData.impactsStakeholders,
-                })
-            })
 
-            // if (!response.ok) {
-            //     const data = await response.json()
-            //     console.log(data)
-            //     throw new Error('Erro ao criar projeto')
-            // }
+                body: JSON.stringify(formData)
+            })
+            if (!response.ok) {
+                const data = await response.json()
+                console.log(data)
+                throw new Error('Erro ao criar projeto')
+            }
 
             const data = await response.json()
             console.log('Projeto criado com sucesso:', data)
@@ -100,7 +102,7 @@ export default function CreateProjectForm() {
                 requester: '',
                 description: '',
                 goal: '',
-                impactsStakeholders: false,
+                impactStakeholders: false,
                 complexity: 'Medium',
                 monthlyRequests: 0,
                 averageTimeSpent: 0,
@@ -170,8 +172,8 @@ export default function CreateProjectForm() {
                     </div>
 
                     <div className='grid grid-cols-4 items-center text-right gap-3'>
-                        <Label htmlFor='impactsStakeholders'>Impacta Stakeholders</Label>
-                        <Select onValueChange={(value) => handleSelectChange(value, 'impactsStakeholders')}>
+                        <Label htmlFor='impactStakeholders'>Impacta Stakeholders</Label>
+                        <Select onValueChange={(value) => handleSelectChange(value, 'impactStakeholders')}>
                             <SelectTrigger className="col-span-3">
                                 <SelectValue placeholder='O projeto impacta clientes e/ou parceiros' />
                             </SelectTrigger>
