@@ -227,8 +227,8 @@ export default function CreateProjectForm() {
             <DialogContent className="max-h-auto max-w-2xl h-auto">
             {/* <DialogContent className="max-w-2xl h-auto"> */}
                 <DialogHeader>
-                    <DialogTitle>Novo projeto</DialogTitle>
-                    <DialogDescription>Criar um novo projeto no sistema</DialogDescription>
+                    <DialogTitle className="pl-4">Novo projeto</DialogTitle>
+                    <DialogDescription className="pl-4">Criar um novo projeto no sistema</DialogDescription>
                 </DialogHeader>
 
                 <Form {...form}>
