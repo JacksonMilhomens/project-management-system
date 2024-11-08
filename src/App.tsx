@@ -94,13 +94,13 @@ export function App() {
     //   enableSorting: false,
     //   enableHiding: false,
     // },
-    // {
-    //   accessorKey: "externalId",
-    //   header: "ID Externo",
-    //   cell: ({ row }) => (
-    //     <div className="capitalize">{row.getValue("externalId")}</div>
-    //   ),
-    // },
+    {
+      accessorKey: "externalId",
+      header: "ID Externo",
+      cell: ({ row }) => (
+        <div className="capitalize">{row.getValue("externalId")}</div>
+      ),
+    },
     {
       accessorKey: "externalId",
       header: ({ column }) => {
