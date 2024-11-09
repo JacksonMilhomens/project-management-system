@@ -1,23 +1,39 @@
 import { cn } from "@/lib/utils"
-import { Loader2, PlusCircle } from "lucide-react"
+import { Eye, Loader2, PlusCircle } from "lucide-react"
 import { format } from "date-fns"
 import { Calendar as CalendarIcon } from "lucide-react"
 import { useState } from "react"
-import { DialogHeader, DialogFooter, Dialog, DialogTrigger, DialogContent, DialogTitle, DialogDescription } from "../ui/dialog"
+import { DialogHeader, DialogFooter, Dialog, DialogTrigger, DialogContent, DialogTitle, DialogDescription, DialogClose } from "../ui/dialog"
 import { Input } from "../ui/input"
 import { Textarea } from "../ui/textarea"
+import { Label } from "../ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select"
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover"
 import { Button } from "../ui/button"
 import { Calendar } from "../ui/calendar"
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "../ui/form"
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "../ui/form"
 import { z } from "zod"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { RadioGroup, RadioGroupItem } from "../ui/radio-group"
+import { Switch } from "../ui/switch"
 import { ScrollArea } from "../ui/scroll-area"
 
-export default function CreateProjectForm() {
+
+interface ProjectData {
+    name: string;
+    department: string
+    requester: string
+    description: string
+    goal: string
+    impactStakeholders: boolean
+    complexity: 'High' | 'Medium' | 'Low'
+    monthlyRequests: number
+    averageTimeSpent: number
+    requestDate: Date | undefined | string
+}
+
+export default function UpdateProjectForm() {
     const [isLoading, setIsLoading] = useState(false);
     const [isOpenDialog, setIsOpenDialog] = useState(false);
 
@@ -79,7 +95,6 @@ export default function CreateProjectForm() {
 
     async function onSubmit(values: z.infer<typeof formSchema>) {
         setIsLoading(true);
-
         try {
             const response = await fetch('https://project-management-wobh.onrender.com/project', {
                 method: 'POST',
@@ -102,27 +117,116 @@ export default function CreateProjectForm() {
             console.error('Erro:', error)
         }
 
-        form.reset()
         setIsLoading(false);
         setIsOpenDialog(false);
-        window.location.reload();
+    }
+    
+    const [date, setDate] = useState<Date>()
+    const [formData, setFormData] = useState<ProjectData>({
+        name: '',
+        department: '',
+        requester: '',
+        description: '',
+        goal: '',
+        impactStakeholders: false,
+        complexity: 'Medium',
+        monthlyRequests: 0,
+        averageTimeSpent: 0,
+        requestDate: undefined
+    })
+
+    // Função para lidar com mudanças nos inputs de texto
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+        const { id, value, type } = e.target
+        console.log(value)
+        setFormData(prev => ({
+            ...prev,
+            [id]: type === 'number' ? Number(value) : value
+        }))
+    }
+
+    // Função para lidar com mudanças nos selects
+    const handleSelectChange = (value: string | boolean, field: keyof ProjectData) => {
+        if (value === 'true') {
+            value = true
+        }
+        if (value === 'false') {
+            value = false
+        }
+        setFormData(prev => ({
+            ...prev,
+            [field]: value
+        }))
+    }
+
+    // Função para lidar com mudança de data
+    const handleDateChange = (newDate: Date | undefined) => {
+        console.log('Alterando a data')
+        setDate(newDate)
+        setFormData(prev => ({
+            ...prev,
+            requestDate: newDate?.toISOString()
+        }))
+    }
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault()
+        
+        console.log(formData)
+
+        // formData['requestDate'] = formData.requestDate ? new Date(formData.requestDate).toISOString() : formData.requestDate
+        try {
+            const response = await fetch('https://project-management-wobh.onrender.com/project', {
+                method: 'POST',
+                headers: {
+                    'Accept': '*/*',    
+                    'Content-Type': 'application/json',
+                },
+
+                body: JSON.stringify(formData)
+            })
+
+            if (!response.ok) {
+                const data = await response.json()
+                console.log(data)
+                throw new Error('Erro ao criar projeto')
+            }
+
+            const data = await response.text()
+            console.log('Projeto criado com sucesso:', data)
+
+            // Limpando a parada depois de dar o post
+            setFormData({
+                name: '',
+                department: '',
+                requester: '',
+                description: '',
+                goal: '',
+                impactStakeholders: false,
+                complexity: 'Medium',
+                monthlyRequests: 0,
+                averageTimeSpent: 0,
+                requestDate: ''
+            })
+            setDate(undefined)
+
+        } catch (error) {
+            console.error('Erro:', error)
+        }
     }
 
     return (
-        <div className='flex items-center justify-between'>
         <Dialog open={isOpenDialog} onOpenChange={setIsOpenDialog}>
             <DialogTrigger asChild>
-                <Button onClick={() => setIsOpenDialog(true)}>
-                    <PlusCircle className='w-4 h-4 mr-2' />
-                    Novo projeto
+                <Button onClick={() => setIsOpenDialog(true)} variant="ghost" className="h-8 w-8 p-0">
+                  <Eye className="h-4 w-4"></Eye>
                 </Button>
             </DialogTrigger>
         
             <DialogContent className="max-h-auto max-w-2xl h-auto">
-            {/* <DialogContent className="max-w-2xl h-auto"> */}
                 <DialogHeader>
-                    <DialogTitle className="pl-4">Novo projeto</DialogTitle>
-                    <DialogDescription className="pl-4">Criar um novo projeto no sistema</DialogDescription>
+                    <DialogTitle className="pl-4">Projeto</DialogTitle>
+                    <DialogDescription className="pl-4">Visualize ou edite as informações de seu projeto</DialogDescription>
                 </DialogHeader>
 
                 <Form {...form}>
@@ -359,6 +463,5 @@ export default function CreateProjectForm() {
                 </Form>
             </DialogContent>
         </Dialog>
-        </div>
     )
 }
