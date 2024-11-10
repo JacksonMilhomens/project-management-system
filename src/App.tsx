@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useFilterRestaurants } from './common/resources/api/project/hooks';
-import { columns } from './components/projects';
+import { columns } from './components/projects/columns';
 import { ProjectsTable } from './components/projects/ProjectsTable';
 import { ThemeProvider } from './components/theme-provider';
 import { Project } from './common/resources/types/index'
