@@ -1,41 +1,35 @@
 import { cn } from "@/lib/utils"
-import { Eye, Loader2, PlusCircle } from "lucide-react"
+import { Eye, Loader2 } from "lucide-react"
 import { format } from "date-fns"
 import { Calendar as CalendarIcon } from "lucide-react"
 import { useState } from "react"
-import { DialogHeader, DialogFooter, Dialog, DialogTrigger, DialogContent, DialogTitle, DialogDescription, DialogClose } from "../ui/dialog"
+import { DialogHeader, DialogFooter, Dialog, DialogTrigger, DialogContent, DialogTitle, DialogDescription } from "../ui/dialog"
 import { Input } from "../ui/input"
 import { Textarea } from "../ui/textarea"
-import { Label } from "../ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select"
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover"
 import { Button } from "../ui/button"
 import { Calendar } from "../ui/calendar"
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "../ui/form"
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "../ui/form"
 import { z } from "zod"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { RadioGroup, RadioGroupItem } from "../ui/radio-group"
-import { Switch } from "../ui/switch"
 import { ScrollArea } from "../ui/scroll-area"
+import { Project } from "@/common/resources/types"
+import { useQueryClient } from "@tanstack/react-query"
+import { useUpdateProject } from "@/common/resources/api/project/hooks"
+import { ptBR } from "date-fns/locale"
 
-
-interface ProjectData {
-    name: string;
-    department: string
-    requester: string
-    description: string
-    goal: string
-    impactStakeholders: boolean
-    complexity: 'High' | 'Medium' | 'Low'
-    monthlyRequests: number
-    averageTimeSpent: number
-    requestDate: Date | undefined | string
+interface UpdateProjectFormProps {
+    project: Project
 }
 
-export default function UpdateProjectForm() {
-    const [isLoading, setIsLoading] = useState(false);
+export default function UpdateProjectForm({ project }: UpdateProjectFormProps) {
     const [isOpenDialog, setIsOpenDialog] = useState(false);
+    const queryClient = useQueryClient();
+    
+    const { mutate: updateProject, isPending: isLoading } = useUpdateProject();
 
     const formSchema = z.object({
         name: z.string().min(1, {
@@ -50,6 +44,9 @@ export default function UpdateProjectForm() {
         description: z.string().min(1, {
             message: "Descrição é obrigatória"
         }),
+        status: z.string().min(1, {
+            message: "Descrição é obrigatória"
+        }),
         goal: z.string().min(1, {
             message: "Objetivo é obrigatório"
         }),
@@ -57,8 +54,9 @@ export default function UpdateProjectForm() {
             required_error: "Este campo é obrigatório",
             invalid_type_error: "Este campo deve ser verdadeiro ou falso"
         }).default(true),
-        complexity: z.string().min(1, {
-            message: "Complexidade é obrigatória"
+        complexity: z.enum(["High", "Medium", "Low"], {
+            required_error: "Complexidade é obrigatória",
+            invalid_type_error: "Complexidade deve ser Alta, Média ou Baixa"
         }),
         monthlyRequests: z.number({ 
             required_error: "O número de solicitações é obrigatório", 
@@ -74,165 +72,101 @@ export default function UpdateProjectForm() {
         }).positive({
             message: "O tempo médio deve ser maior que 0"
         }),
-        requestDate: z.union([z.string().datetime({ message: 'Data da solicitação é obrigatória' }), z.date()]),
+        requestDate: z.union([z.string(), z.string().datetime({ message: 'Data da solicitação é obrigatória' }), z.date()])
     });
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
-            name: "",
-            department: "",
-            requester: "",
-            description: "",
-            goal: "",
-            impactStakeholders: true,
-            complexity: '',
-            monthlyRequests: 0,
-            averageTimeSpent: 0,
-            requestDate: ''
-        },
-    })
-
-    async function onSubmit(values: z.infer<typeof formSchema>) {
-        setIsLoading(true);
-        try {
-            const response = await fetch('https://project-management-wobh.onrender.com/project', {
-                method: 'POST',
-                headers: {
-                    'Accept': '*/*',    
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(values)
-            })
-
-            if (!response.ok) {
-                const data = await response.json()
-                console.log(data)
-                throw new Error('Erro ao criar projeto')
-            }
-
-            const data = await response.text()
-            console.log('Projeto criado com sucesso:', data)
-        } catch (error) {
-            console.error('Erro:', error)
+            name: project.name,
+            department: project.department,
+            requester: project.requester,
+            description: project.description,
+            status: project.status,
+            goal: project.goal,
+            impactStakeholders: project.impactStakeholders,
+            complexity: project.complexity,
+            monthlyRequests: project.monthlyRequests,
+            averageTimeSpent: project.averageTimeSpent,
+            requestDate: project.requestDate
         }
+    });
 
-        setIsLoading(false);
-        setIsOpenDialog(false);
-    }
+    function onSubmit(values: z.infer<typeof formSchema>) {    
+        const formatDate = (date: Date | string) => {
+            if (date instanceof Date) {
+                return date.toISOString();
+            }
+            return new Date(date).toISOString();
+        };
     
-    const [date, setDate] = useState<Date>()
-    const [formData, setFormData] = useState<ProjectData>({
-        name: '',
-        department: '',
-        requester: '',
-        description: '',
-        goal: '',
-        impactStakeholders: false,
-        complexity: 'Medium',
-        monthlyRequests: 0,
-        averageTimeSpent: 0,
-        requestDate: undefined
-    })
-
-    // Função para lidar com mudanças nos inputs de texto
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-        const { id, value, type } = e.target
-        console.log(value)
-        setFormData(prev => ({
-            ...prev,
-            [id]: type === 'number' ? Number(value) : value
-        }))
-    }
-
-    // Função para lidar com mudanças nos selects
-    const handleSelectChange = (value: string | boolean, field: keyof ProjectData) => {
-        if (value === 'true') {
-            value = true
-        }
-        if (value === 'false') {
-            value = false
-        }
-        setFormData(prev => ({
-            ...prev,
-            [field]: value
-        }))
-    }
-
-    // Função para lidar com mudança de data
-    const handleDateChange = (newDate: Date | undefined) => {
-        console.log('Alterando a data')
-        setDate(newDate)
-        setFormData(prev => ({
-            ...prev,
-            requestDate: newDate?.toISOString()
-        }))
-    }
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault()
-        
-        console.log(formData)
-
-        // formData['requestDate'] = formData.requestDate ? new Date(formData.requestDate).toISOString() : formData.requestDate
-        try {
-            const response = await fetch('https://project-management-wobh.onrender.com/project', {
-                method: 'POST',
-                headers: {
-                    'Accept': '*/*',    
-                    'Content-Type': 'application/json',
+        const formattedValues = {
+            ...values,
+            requestDate: formatDate(values.requestDate),
+        };
+    
+        updateProject(
+            { 
+                id: project.id, 
+                data: formattedValues
+            },
+            {
+                onSuccess: () => {
+                    queryClient.invalidateQueries({ queryKey: ['projects'] });
+                    setIsOpenDialog(false);
                 },
-
-                body: JSON.stringify(formData)
-            })
-
-            if (!response.ok) {
-                const data = await response.json()
-                console.log(data)
-                throw new Error('Erro ao criar projeto')
+                onError: (error: any) => {
+                    alert('Erro ao atualizar o projeto: ' + (error.response?.data?.message || error.message));
+                }
             }
-
-            const data = await response.text()
-            console.log('Projeto criado com sucesso:', data)
-
-            // Limpando a parada depois de dar o post
-            setFormData({
-                name: '',
-                department: '',
-                requester: '',
-                description: '',
-                goal: '',
-                impactStakeholders: false,
-                complexity: 'Medium',
-                monthlyRequests: 0,
-                averageTimeSpent: 0,
-                requestDate: ''
-            })
-            setDate(undefined)
-
-        } catch (error) {
-            console.error('Erro:', error)
-        }
+        );
     }
 
     return (
         <Dialog open={isOpenDialog} onOpenChange={setIsOpenDialog}>
             <DialogTrigger asChild>
                 <Button onClick={() => setIsOpenDialog(true)} variant="ghost" className="h-8 w-8 p-0">
-                  <Eye className="h-4 w-4"></Eye>
+                    <Eye className="h-4 w-4"></Eye>
                 </Button>
             </DialogTrigger>
-        
+
             <DialogContent className="max-h-auto max-w-2xl h-auto">
                 <DialogHeader>
-                    <DialogTitle className="pl-4">Projeto</DialogTitle>
-                    <DialogDescription className="pl-4">Visualize ou edite as informações de seu projeto</DialogDescription>
+                    <DialogTitle className="pl-4">Editar Projeto</DialogTitle>
+                    <DialogDescription className="pl-4">
+                        Atualize as informações do projeto {project.name}
+                    </DialogDescription>
                 </DialogHeader>
 
                 <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)}>
+                <form 
+                    onSubmit={form.handleSubmit(onSubmit)} className="space-y-4"
+                >
                     <ScrollArea className="h-96 w-auto rounded-md px-3">
                     <div className="space-y-4 pb-4">
+
+                    <FormItem className="p-1">
+                        <FormLabel>ID Externo</FormLabel>
+                        <FormControl>
+                            <Input 
+                                value={project.externalId} 
+                                disabled 
+                                className="bg-muted"
+                            />
+                        </FormControl>
+                    </FormItem>
+
+                    <FormItem className="p-1">
+                        <FormLabel>Nível de Prioridade</FormLabel>
+                        <FormControl>
+                            <Input 
+                                value={project.priorityLevel} 
+                                disabled 
+                                className="bg-muted"
+                            />
+                        </FormControl>
+                    </FormItem>
+
                     <FormField                     
                         control={form.control}
                         name="name"
@@ -288,6 +222,35 @@ export default function UpdateProjectForm() {
                             </FormItem>
                         )}>
                     </FormField>
+
+                    <FormField
+                        control={form.control}
+                        name="status"
+                        render={({ field }) => (
+                            <FormItem className="px-1">
+                                <FormLabel>Status</FormLabel>
+                                <FormControl>
+                                    <Select 
+                                        value={field.value} 
+                                        onValueChange={field.onChange}
+                                        defaultValue={field.value}
+                                    >
+                                        <SelectTrigger>
+                                            <SelectValue placeholder='Selecione o status do projeto' />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value='Backlog'>Backlog</SelectItem>
+                                            <SelectItem value='In Progress'>Em Andamento</SelectItem>
+                                            <SelectItem value='Declined'>Cancelado</SelectItem>
+                                            <SelectItem value='Completed'>Concluído</SelectItem>
+                                            <SelectItem value='On Hold'>Stand By</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}>
+                    </FormField>
                 
                     <FormField                     
                         control={form.control}
@@ -296,11 +259,14 @@ export default function UpdateProjectForm() {
                             <FormItem className="px-1">
                                 <FormLabel>Objetivo</FormLabel>
                                 <FormControl>
-                                    <Select {...field} onValueChange={field.onChange}>
+                                    <Select 
+                                        value={field.value} 
+                                        onValueChange={field.onChange}
+                                        defaultValue={field.value}
+                                    >
                                         <SelectTrigger>
                                             <SelectValue placeholder='Selecione o objetivo do projeto' />
                                         </SelectTrigger>
-
                                         <SelectContent>
                                             <SelectItem value='Reduzir volume de atendimento'>Reduzir volume de atendimento</SelectItem>
                                             <SelectItem value='Reduzir volume de trabalhos repetitivos'>Reduzir volume de trabalhos repetitivos</SelectItem>
@@ -355,11 +321,14 @@ export default function UpdateProjectForm() {
                             <FormItem className="px-1">
                                 <FormLabel>Complexidade</FormLabel>
                                 <FormControl>
-                                    <Select {...field} onValueChange={field.onChange}>
+                                    <Select 
+                                        value={field.value} 
+                                        onValueChange={field.onChange}
+                                        defaultValue={field.value}
+                                    >
                                         <SelectTrigger>
                                             <SelectValue placeholder='Qual a complexidade do projeto?' />
                                         </SelectTrigger>
-
                                         <SelectContent>
                                             <SelectItem value='High'>Alta</SelectItem>
                                             <SelectItem value='Medium'>Média</SelectItem>
@@ -393,12 +362,50 @@ export default function UpdateProjectForm() {
                             <FormItem className="px-1">
                                 <FormLabel>Tempo Médio Gasto</FormLabel>
                                 <FormControl>
-                                    <Input type='number' placeholder="Tempo médio gasto em minutos" {...form.register("averageTimeSpent", { valueAsNumber: true })} />
+                                    <Input 
+                                        type='number'
+                                        step="0.01"
+                                        placeholder="Tempo médio gasto em minutos" 
+                                        {...form.register("averageTimeSpent", { valueAsNumber: true })} 
+                                    />
                                 </FormControl>
                                 <FormMessage />
                             </FormItem>
                         )}>
                     </FormField>
+
+                    <FormItem className="p-1">
+                        <FormLabel>Minutos Economizados por Mês</FormLabel>
+                        <FormControl>
+                            <Input 
+                                value={project.monthlyMinutesSaved.toLocaleString()} 
+                                disabled 
+                                className="bg-muted"
+                            />
+                        </FormControl>
+                    </FormItem>
+
+                    <FormItem className="p-1">
+                        <FormLabel>Ganho Financeiro</FormLabel>
+                        <FormControl>
+                            <Input 
+                                value={project.financialGain} 
+                                disabled 
+                                className="bg-muted"
+                            />
+                        </FormControl>
+                    </FormItem>
+
+                    <FormItem className="p-1">
+                        <FormLabel>Faixa de Ganho</FormLabel>
+                        <FormControl>
+                            <Input 
+                                value={project.rangeOfGain} 
+                                disabled 
+                                className="bg-muted"
+                            />
+                        </FormControl>
+                    </FormItem>
 
                     <FormField                     
                         control={form.control}
@@ -418,7 +425,9 @@ export default function UpdateProjectForm() {
                                                 )}
                                             >
                                                 <CalendarIcon className="mr-2 h-4 w-4" />
-                                                {field.value ? format(field.value, "dd/MM/yyyy") : <span>Data da solicitação</span>}
+                                                {field.value ? (
+                                                    format(new Date(field.value), "dd/MM/yyyy", { locale: ptBR })
+                                                ) : <span>Data da solicitação</span>}
                                             </Button>
                                         </PopoverTrigger>
 
@@ -428,11 +437,12 @@ export default function UpdateProjectForm() {
                                                 mode="single"
                                                 id="requestDate"
                                                 selected={field.value ? new Date(field.value) : undefined}
-                                                onSelect={(date) => field.onChange(date ? date.toISOString() : '')}
+                                                onSelect={(date) => field.onChange(date ? date.toISOString(): '')}
                                                 disabled={(date) =>
                                                     date > new Date() || date < new Date("1900-01-01")
                                                 }
                                                 initialFocus
+                                                locale={ptBR}
                                             />
                                         </PopoverContent>
                                     </Popover>
@@ -447,7 +457,10 @@ export default function UpdateProjectForm() {
                     </ScrollArea>
 
                     <DialogFooter className="pr-4">
-                            <Button type="submit" onClick={form.handleSubmit(onSubmit)} disabled={isLoading}>
+                        <Button 
+                            type="submit" 
+                            disabled={isLoading}
+                        >
                                 {isLoading ? (
                                     <div className="flex items-center gap-2">
                                         <Loader2 className="animate-spin" />
