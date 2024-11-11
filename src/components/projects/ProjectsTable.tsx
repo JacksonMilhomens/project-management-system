@@ -19,6 +19,7 @@ import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMe
 import { Project } from '@/common/resources/types';
 import CreateProjectForm from './createProject';
 import { ModeToggle } from '../mode-toggle';
+import { ColumnId, columnNames } from './columns';
 
 interface ProjectsTableProps {
   data: Project[];
@@ -84,13 +85,13 @@ export function ProjectsTable({ data, columns }: ProjectsTableProps) {
                         return (
                             <DropdownMenuCheckboxItem
                             key={column.id}
-                            className="capitalize"
+                            className="normal-case"
                             checked={column.getIsVisible()}
                             onCheckedChange={(value) =>
                                 column.toggleVisibility(!!value)
                             }
                             >
-                            {column.id}
+                            {columnNames[column.id as ColumnId] || column.id}
                             </DropdownMenuCheckboxItem>
                         )
                         })}
