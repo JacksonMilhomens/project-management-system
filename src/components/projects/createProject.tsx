@@ -289,7 +289,7 @@ export default function CreateProjectForm() {
                             <FormItem className="px-1">
                                 <FormLabel>Tempo Médio Gasto</FormLabel>
                                 <FormControl>
-                                    <Input type='number' placeholder="Tempo médio gasto em minutos" {...form.register("averageTimeSpent", { valueAsNumber: true })} />
+                                    <Input type='number' step="0.01" placeholder="Tempo médio gasto em minutos" {...form.register("averageTimeSpent", { valueAsNumber: true })} />
                                 </FormControl>
                                 <FormMessage />
                             </FormItem>
