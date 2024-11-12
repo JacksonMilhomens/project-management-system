@@ -14,7 +14,7 @@ import {
 } from "../ui/alert-dialog";
 import { useQueryClient } from "@tanstack/react-query";
 import { Project } from "@/common/resources/types";
-import { UpdateProjectForm } from "../UpdateProject";
+import { UpdateProjectForm } from "./UpdateProject";
 import { useDeleteProject } from "@/common/resources/api/project/hooks";
 
 interface ProjectActionsProps {
