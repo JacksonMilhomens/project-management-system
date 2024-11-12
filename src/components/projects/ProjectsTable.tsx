@@ -29,7 +29,7 @@ import {
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
 import { Project } from "@/common/resources/types";
-import CreateProjectForm from "./CreateProject";
+import { CreateProjectForm } from "../CreateProject";
 import { ModeToggle } from "../mode-toggle";
 import { ColumnId, columnNames } from "./columns";
 
