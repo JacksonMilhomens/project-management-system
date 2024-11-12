@@ -20,6 +20,19 @@ export type Project = {
   updatedAt: Date;
 };
 
+export interface CreateProjectData {
+  name: string;
+  department: string;
+  requester: string;
+  description: string;
+  goal: string;
+  impactStakeholders: boolean;
+  complexity: string;
+  monthlyRequests: number;
+  averageTimeSpent: number;
+  requestDate: string;
+}
+
 export interface UpdateProjectData {
   name: string;
   department: string;
@@ -27,7 +40,7 @@ export interface UpdateProjectData {
   description: string;
   goal: string;
   impactStakeholders: boolean;
-  complexity: "High" | "Medium" | "Low";
+  complexity: string;
   monthlyRequests: number;
   averageTimeSpent: number;
   requestDate: string;

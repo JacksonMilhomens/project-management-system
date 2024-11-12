@@ -1,10 +1,10 @@
-import { Project } from "@/common/resources/types"
-import { ColumnDef } from "@tanstack/react-table"
-import { Button } from "../ui/button"
-import { ArrowUpDown } from "lucide-react"
-import { ProjectActions } from "./ProjectActions"
-import { format } from "date-fns"
-import { ptBR } from "date-fns/locale"
+import { Project } from "@/common/resources/types";
+import { ColumnDef } from "@tanstack/react-table";
+import { Button } from "../ui/button";
+import { ArrowUpDown } from "lucide-react";
+import { ProjectActions } from "./ProjectActions";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 export const columns: ColumnDef<Project>[] = [
   {
@@ -18,9 +18,11 @@ export const columns: ColumnDef<Project>[] = [
           ID Externo
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
-      )
+      );
     },
-    cell: ({ row }) => <div className="capitalize">{row.getValue("externalId")}</div>,
+    cell: ({ row }) => (
+      <div className="capitalize">{row.getValue("externalId")}</div>
+    ),
   },
   {
     accessorKey: "requestDate",
@@ -33,14 +35,12 @@ export const columns: ColumnDef<Project>[] = [
           Data da Solicitação
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
-      )
+      );
     },
     cell: ({ row }) => {
       const date: string = row.getValue("requestDate");
       return (
-        <div>
-          {format(new Date(date), "dd/MM/yyyy", { locale: ptBR })}
-        </div>
+        <div>{format(new Date(date), "dd/MM/yyyy", { locale: ptBR })}</div>
       );
     },
   },
@@ -55,7 +55,7 @@ export const columns: ColumnDef<Project>[] = [
           Projeto
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
-      )
+      );
     },
     cell: ({ row }) => <div className="capitalize">{row.getValue("name")}</div>,
   },
@@ -70,9 +70,11 @@ export const columns: ColumnDef<Project>[] = [
           Solicitante
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
-      )
+      );
     },
-    cell: ({ row }) => <div className="capitalize">{row.getValue("requester")}</div>,
+    cell: ({ row }) => (
+      <div className="capitalize">{row.getValue("requester")}</div>
+    ),
   },
   {
     accessorKey: "status",
@@ -81,41 +83,51 @@ export const columns: ColumnDef<Project>[] = [
         <Button
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
+        >
           Status
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
-      )
+      );
     },
-    cell: ({ row }) => <div className="capitalize">{row.getValue("status")}</div>,
+    cell: ({ row }) => (
+      <div className="capitalize">{row.getValue("status")}</div>
+    ),
   },
   {
     accessorKey: "priorityLevel",
     header: ({ column }) => {
       return (
         <Button
-        variant="ghost"
-        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
           Prioridade
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
-      )
+      );
     },
-    cell: ({ row }) => <div className="capitalize">{row.getValue("priorityLevel")}</div>,
+    cell: ({ row }) => (
+      <div className="capitalize">{row.getValue("priorityLevel")}</div>
+    ),
   },
   {
     id: "actions",
     header: "Ações",
     enableHiding: false,
     cell: ({ row }) => {
-      const project = row.original
-      return <ProjectActions project={project} />
+      const project = row.original;
+      return <ProjectActions project={project} />;
     },
   },
 ];
 
-export type ColumnId = "externalId" | "requestDate" | "name" | "requester" | "status" | "priorityLevel";
+export type ColumnId =
+  | "externalId"
+  | "requestDate"
+  | "name"
+  | "requester"
+  | "status"
+  | "priorityLevel";
 
 export const columnNames: Record<ColumnId, string> = {
   externalId: "ID Externo",
@@ -123,5 +135,5 @@ export const columnNames: Record<ColumnId, string> = {
   name: "Projeto",
   requester: "Solicitante",
   status: "Status",
-  priorityLevel: "Prioridade"
+  priorityLevel: "Prioridade",
 };

@@ -1,364 +1,384 @@
-import { cn } from "@/lib/utils"
-import { Loader2, PlusCircle } from "lucide-react"
-import { format } from "date-fns"
-import { Calendar as CalendarIcon } from "lucide-react"
-import { useState } from "react"
-import { DialogHeader, DialogFooter, Dialog, DialogTrigger, DialogContent, DialogTitle, DialogDescription } from "../ui/dialog"
-import { Input } from "../ui/input"
-import { Textarea } from "../ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select"
-import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover"
-import { Button } from "../ui/button"
-import { Calendar } from "../ui/calendar"
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "../ui/form"
-import { z } from "zod"
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { RadioGroup, RadioGroupItem } from "../ui/radio-group"
-import { ScrollArea } from "../ui/scroll-area"
+import { Loader2, PlusCircle } from "lucide-react";
+import { useState } from "react";
+import {
+  DialogHeader,
+  DialogFooter,
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogTitle,
+  DialogDescription,
+} from "../ui/dialog";
+import { Input } from "../ui/input";
+import { Textarea } from "../ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select";
+import { Button } from "../ui/button";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "../ui/form";
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { ScrollArea } from "../ui/scroll-area";
+import { useCreateProject } from "@/common/resources/api/project/hooks";
+import { useQueryClient } from "@tanstack/react-query";
+import { DatePicker } from "../ui/date-picker";
 
 export default function CreateProjectForm() {
-    const [isLoading, setIsLoading] = useState(false);
-    const [isOpenDialog, setIsOpenDialog] = useState(false);
+  const [isOpenDialog, setIsOpenDialog] = useState(false);
+  const createProject = useCreateProject();
+  const queryClient = useQueryClient();
 
-    const formSchema = z.object({
-        name: z.string().min(1, {
-            message: "Nome é obrigatório"
-        }),
-        department: z.string().min(1, {
-            message: "Departamento é obrigatório"
-        }),
-        requester: z.string().min(1, {
-            message: "Solicitante é obrigatório"
-        }),
-        description: z.string().min(1, {
-            message: "Descrição é obrigatória"
-        }),
-        goal: z.string().min(1, {
-            message: "Objetivo é obrigatório"
-        }),
-        impactStakeholders: z.boolean({
-            required_error: "Este campo é obrigatório",
-            invalid_type_error: "Este campo deve ser verdadeiro ou falso"
-        }).default(true),
-        complexity: z.string().min(1, {
-            message: "Complexidade é obrigatória"
-        }),
-        monthlyRequests: z.number({ 
-            required_error: "O número de solicitações é obrigatório", 
-            invalid_type_error: "O número de solicitações deve ser um valor numérico" 
-        }).int().positive({
-            message: "O número de solicitações deve ser maior que 0"
-        }),
-        averageTimeSpent: z.number({ 
-            required_error: "O tempo médio gasto é obrigatório", 
-            invalid_type_error: "O tempo médio deve ser um valor numérico"
-        }).gt(0, {
-            message: "O tempo médio deve ser maior que 0"
-        }).positive({
-            message: "O tempo médio deve ser maior que 0"
-        }),
-        requestDate: z.union([z.string().datetime({ message: 'Data da solicitação é obrigatória' }), z.date()]),
-    });
+  const formSchema = z.object({
+    name: z.string().min(1, {
+      message: "Nome é obrigatório",
+    }),
+    department: z.string().min(1, {
+      message: "Departamento é obrigatório",
+    }),
+    requester: z.string().min(1, {
+      message: "Solicitante é obrigatório",
+    }),
+    description: z.string().min(1, {
+      message: "Descrição é obrigatória",
+    }),
+    goal: z.string().min(1, {
+      message: "Objetivo é obrigatório",
+    }),
+    impactStakeholders: z.boolean({
+      required_error: "Este campo é obrigatório",
+      invalid_type_error: "Este campo deve ser verdadeiro ou falso",
+    }),
+    complexity: z.string().min(1, {
+      message: "Complexidade é obrigatória",
+    }),
+    monthlyRequests: z
+      .number({
+        required_error: "O número de solicitações é obrigatório",
+        invalid_type_error:
+          "O número de solicitações deve ser um valor numérico",
+      })
+      .int()
+      .positive({
+        message: "O número de solicitações deve ser maior que 0",
+      }),
+    averageTimeSpent: z
+      .number({
+        required_error: "O tempo médio gasto é obrigatório",
+        invalid_type_error: "O tempo médio deve ser um valor numérico",
+      })
+      .gt(0, {
+        message: "O tempo médio deve ser maior que 0",
+      })
+      .positive({
+        message: "O tempo médio deve ser maior que 0",
+      }),
+    requestDate: z.date({
+      required_error: "Data da solicitação é obrigatória",
+    }),
+  });
 
-    const form = useForm<z.infer<typeof formSchema>>({
-        resolver: zodResolver(formSchema),
-        defaultValues: {
-            name: "",
-            department: "",
-            requester: "",
-            description: "",
-            goal: "",
-            impactStakeholders: true,
-            complexity: '',
-            monthlyRequests: 0,
-            averageTimeSpent: 0,
-            requestDate: ''
-        },
-    })
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      name: "",
+      department: "",
+      requester: "",
+      description: "",
+      goal: "",
+      impactStakeholders: undefined,
+      complexity: "",
+      monthlyRequests: 0,
+      averageTimeSpent: 0,
+      requestDate: undefined,
+    },
+  });
 
-    async function onSubmit(values: z.infer<typeof formSchema>) {
-        setIsLoading(true);
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    const formatDate = (date: Date | string) => {
+      if (date instanceof Date) {
+        return date.toISOString();
+      }
+      return new Date(date).toISOString();
+    };
 
-        try {
-            const response = await fetch('https://project-management-wobh.onrender.com/project', {
-                method: 'POST',
-                headers: {
-                    'Accept': '*/*',    
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(values)
-            })
+    const formattedValues = {
+      ...values,
+      requestDate: formatDate(values.requestDate),
+    };
 
-            if (!response.ok) {
-                const data = await response.json()
-                console.log(data)
-                throw new Error('Erro ao criar projeto')
-            }
-
-            const data = await response.text()
-            console.log('Projeto criado com sucesso:', data)
-        } catch (error) {
-            console.error('Erro:', error)
-        }
-
-        form.reset()
-        setIsLoading(false);
-        setIsOpenDialog(false);
-        window.location.reload();
+    try {
+      await createProject.mutateAsync(formattedValues);
+      form.reset();
+      setIsOpenDialog(false);
+      queryClient.invalidateQueries({ queryKey: ["projects"] });
+    } catch (error) {
+      console.error("Erro:", error);
     }
+  }
 
-    return (
-        <div className='flex items-center justify-between'>
-        <Dialog open={isOpenDialog} onOpenChange={setIsOpenDialog}>
-            <DialogTrigger asChild>
-                <Button onClick={() => setIsOpenDialog(true)}>
-                    <PlusCircle className='w-4 h-4 mr-2' />
-                    Novo projeto
-                </Button>
-            </DialogTrigger>
-        
-            <DialogContent className="max-h-auto max-w-2xl h-auto">
-            {/* <DialogContent className="max-w-2xl h-auto"> */}
-                <DialogHeader>
-                    <DialogTitle className="pl-4">Novo projeto</DialogTitle>
-                    <DialogDescription className="pl-4">Criar um novo projeto no sistema</DialogDescription>
-                </DialogHeader>
+  return (
+    <div className="flex items-center justify-between">
+      <Dialog open={isOpenDialog} onOpenChange={setIsOpenDialog}>
+        <DialogTrigger asChild>
+          <Button onClick={() => setIsOpenDialog(true)}>
+            <PlusCircle className="w-4 h-4 mr-2" />
+            Novo projeto
+          </Button>
+        </DialogTrigger>
 
-                <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)}>
-                    <ScrollArea className="h-96 w-auto rounded-md px-3">
-                    <div className="space-y-4 pb-4">
-                    <FormField                     
-                        control={form.control}
-                        name="name"
-                        render={({ field }) => (
-                            <FormItem className="p-1">
-                                <FormLabel>Projeto</FormLabel>
-                                <FormControl>
-                                    <Input placeholder="Nome do projeto" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}>
-                    </FormField>
-                
-                    <FormField                
-                        control={form.control}
-                        name="department"
-                        render={({ field }) => (
-                            <FormItem className="p-1">
-                                <FormLabel>Departamento</FormLabel>
-                                <FormControl>
-                                    <Input placeholder="Nome do departamento" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}>
-                    </FormField>
-                
-                    <FormField                     
-                        control={form.control}
-                        name="requester"
-                        render={({ field }) => (
-                            <FormItem className="px-1">
-                                <FormLabel>Solicitante</FormLabel>
-                                <FormControl>
-                                    <Input placeholder="Nome do solicitante" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}>
-                    </FormField>
-                
-                    <FormField                     
-                        control={form.control}
-                        name="description"
-                        render={({ field }) => (
-                            <FormItem className="px-1">
-                                <FormLabel>Descrição</FormLabel>
-                                <FormControl>
-                                    <Textarea placeholder="Descreva o seu projeto" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}>
-                    </FormField>
-                
-                    <FormField                     
-                        control={form.control}
-                        name="goal"
-                        render={({ field }) => (
-                            <FormItem className="px-1">
-                                <FormLabel>Objetivo</FormLabel>
-                                <FormControl>
-                                    <Select {...field} onValueChange={field.onChange}>
-                                        <SelectTrigger>
-                                            <SelectValue placeholder='Selecione o objetivo do projeto' />
-                                        </SelectTrigger>
+        <DialogContent className="max-h-auto max-w-2xl h-auto">
+          <DialogHeader>
+            <DialogTitle className="pl-4">Novo projeto</DialogTitle>
+            <DialogDescription className="pl-4">
+              Criar um novo projeto no sistema
+            </DialogDescription>
+          </DialogHeader>
 
-                                        <SelectContent>
-                                            <SelectItem value='Reduzir volume de atendimento'>Reduzir volume de atendimento</SelectItem>
-                                            <SelectItem value='Reduzir volume de trabalhos repetitivos'>Reduzir volume de trabalhos repetitivos</SelectItem>
-                                            <SelectItem value='Melhoria da satisfação do cliente'>Melhoria da satisfação do cliente</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}>
-                    </FormField>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)}>
+              <ScrollArea className="h-96 w-auto rounded-md px-3">
+                <div className="space-y-4 pb-4">
+                  <FormField
+                    control={form.control}
+                    name="name"
+                    render={({ field }) => (
+                      <FormItem className="p-1">
+                        <FormLabel>Projeto</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Nome do projeto" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  ></FormField>
 
-                    <FormField                     
-                        control={form.control}
-                        name="impactStakeholders"
-                        render={({ field }) => (
-                            <FormItem className="px-1">
-                                <FormLabel>Impacta Stakeholders</FormLabel>
-                                <FormControl>
-                                    <RadioGroup
-                                        onValueChange={(value) => field.onChange(value === "true")}
-                                        defaultValue={field.value ? "true" : "false"}
-                                        className="flex space-y-1"
-                                        >
-                                        <FormItem className="flex items-center space-x-3 space-y-0">
-                                            <FormControl>
-                                                <RadioGroupItem value="true" />
-                                            </FormControl>
-                                            <FormLabel className="font-normal">
-                                                Sim
-                                            </FormLabel>
-                                        </FormItem>
-                                        <FormItem className="flex items-center space-x-3 space-y-0">
-                                            <FormControl>
-                                                <RadioGroupItem value="false" />
-                                            </FormControl>
-                                            <FormLabel className="font-normal">
-                                                Não
-                                            </FormLabel>
-                                        </FormItem>
-                                    </RadioGroup>
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}>
-                    </FormField>
+                  <FormField
+                    control={form.control}
+                    name="department"
+                    render={({ field }) => (
+                      <FormItem className="p-1">
+                        <FormLabel>Departamento</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="Nome do departamento"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  ></FormField>
 
-                    <FormField                     
-                        control={form.control}
-                        name="complexity"
-                        render={({ field }) => (
-                            <FormItem className="px-1">
-                                <FormLabel>Complexidade</FormLabel>
-                                <FormControl>
-                                    <Select {...field} onValueChange={field.onChange}>
-                                        <SelectTrigger>
-                                            <SelectValue placeholder='Qual a complexidade do projeto?' />
-                                        </SelectTrigger>
+                  <FormField
+                    control={form.control}
+                    name="requester"
+                    render={({ field }) => (
+                      <FormItem className="px-1">
+                        <FormLabel>Solicitante</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Nome do solicitante" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  ></FormField>
 
-                                        <SelectContent>
-                                            <SelectItem value='High'>Alta</SelectItem>
-                                            <SelectItem value='Medium'>Média</SelectItem>
-                                            <SelectItem value='Low'>Baixa</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}>
-                    </FormField>
+                  <FormField
+                    control={form.control}
+                    name="description"
+                    render={({ field }) => (
+                      <FormItem className="px-1">
+                        <FormLabel>Descrição</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            placeholder="Descreva o seu projeto"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  ></FormField>
 
-                    <FormField                     
-                        control={form.control}
-                        name="monthlyRequests"
-                        render={({ field }) => (
-                            <FormItem className="px-1">
-                                <FormLabel>Número de Solicitações Mensais</FormLabel>
-                                <FormControl>
-                                    <Input type="number" placeholder="Número de solicitações mensais recebidas"  {...form.register("monthlyRequests", { valueAsNumber: true })} />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}>
-                    </FormField>
+                  <FormField
+                    control={form.control}
+                    name="goal"
+                    render={({ field }) => (
+                      <FormItem className="px-1">
+                        <FormLabel>Objetivo</FormLabel>
+                        <FormControl>
+                          <Select
+                            onValueChange={field.onChange}
+                            defaultValue={field.value}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecione o objetivo do projeto" />
+                            </SelectTrigger>
 
-                    <FormField                     
-                        control={form.control}
-                        name="averageTimeSpent"
-                        render={({ field }) => (
-                            <FormItem className="px-1">
-                                <FormLabel>Tempo Médio Gasto</FormLabel>
-                                <FormControl>
-                                    <Input type='number' step="0.01" placeholder="Tempo médio gasto em minutos" {...form.register("averageTimeSpent", { valueAsNumber: true })} />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}>
-                    </FormField>
+                            <SelectContent>
+                              <SelectItem value="Reduzir volume de atendimento">
+                                Reduzir volume de atendimento
+                              </SelectItem>
+                              <SelectItem value="Reduzir volume de trabalhos repetitivos">
+                                Reduzir volume de trabalhos repetitivos
+                              </SelectItem>
+                              <SelectItem value="Melhoria da satisfação do cliente">
+                                Melhoria da satisfação do cliente
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  ></FormField>
 
-                    <FormField                     
-                        control={form.control}
-                        name="requestDate"
-                        render={({ field }) => (
-                            <FormItem className="px-1">
-                                <FormLabel>Data da Solicitação</FormLabel>
-                                <FormControl>
-                                <div>
-                                    <Popover>
-                                        <PopoverTrigger asChild>
-                                            <Button
-                                                variant={"outline"}
-                                                className={cn(
-                                                    "col-span-3 justify-start text-left font-normal",
-                                                    !field.value && "text-muted-foreground"
-                                                )}
-                                            >
-                                                <CalendarIcon className="mr-2 h-4 w-4" />
-                                                {field.value ? format(field.value, "dd/MM/yyyy") : <span>Data da solicitação</span>}
-                                            </Button>
-                                        </PopoverTrigger>
+                  <FormField
+                    control={form.control}
+                    name="impactStakeholders"
+                    render={({ field }) => (
+                      <FormItem className="px-1">
+                        <FormLabel>Impacta Stakeholders</FormLabel>
+                        <FormControl>
+                          <Select
+                            onValueChange={(value) =>
+                              field.onChange(value === "true")
+                            }
+                            defaultValue={field.value?.toString()}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="O projeto afeta outras partes interessadas?" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="true">Sim</SelectItem>
+                              <SelectItem value="false">Não</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                                        <PopoverContent className="w-auto p-0">
-                                            <Calendar
-                                                required
-                                                mode="single"
-                                                id="requestDate"
-                                                selected={field.value ? new Date(field.value) : undefined}
-                                                onSelect={(date) => field.onChange(date ? date.toISOString() : '')}
-                                                disabled={(date) =>
-                                                    date > new Date() || date < new Date("1900-01-01")
-                                                }
-                                                initialFocus
-                                            />
-                                        </PopoverContent>
-                                    </Popover>
-                                    </div>
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}>
-                    </FormField>
-                
+                  <FormField
+                    control={form.control}
+                    name="complexity"
+                    render={({ field }) => (
+                      <FormItem className="px-1">
+                        <FormLabel>Complexidade</FormLabel>
+                        <FormControl>
+                          <Select
+                            onValueChange={field.onChange}
+                            defaultValue={field.value}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Qual a complexidade do projeto?" />
+                            </SelectTrigger>
+
+                            <SelectContent>
+                              <SelectItem value="High">Alta</SelectItem>
+                              <SelectItem value="Medium">Média</SelectItem>
+                              <SelectItem value="Low">Baixa</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  ></FormField>
+
+                  <FormField
+                    control={form.control}
+                    name="monthlyRequests"
+                    render={() => (
+                      <FormItem className="px-1">
+                        <FormLabel>Número de Solicitações Mensais</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            placeholder="Número de solicitações mensais recebidas"
+                            {...form.register("monthlyRequests", {
+                              valueAsNumber: true,
+                            })}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  ></FormField>
+
+                  <FormField
+                    control={form.control}
+                    name="averageTimeSpent"
+                    render={() => (
+                      <FormItem className="px-1">
+                        <FormLabel>Tempo Médio Gasto</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            step="0.01"
+                            placeholder="Tempo médio gasto em minutos"
+                            {...form.register("averageTimeSpent", {
+                              valueAsNumber: true,
+                            })}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  ></FormField>
+
+                  <FormField
+                    control={form.control}
+                    name="requestDate"
+                    render={({ field }) => (
+                      <FormItem className="px-1">
+                        <FormLabel>Data da Solicitação</FormLabel>
+                        <div>
+                          <DatePicker
+                            value={field.value}
+                            onChange={field.onChange}
+                          />
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </ScrollArea>
+
+              <DialogFooter className="pr-4">
+                <Button
+                  type="submit"
+                  onClick={form.handleSubmit(onSubmit)}
+                  disabled={createProject.isPending}
+                >
+                  {createProject.isPending ? (
+                    <div className="flex items-center gap-2">
+                      <Loader2 className="animate-spin" />
+                      Salvando...
                     </div>
-                    </ScrollArea>
-
-                    <DialogFooter className="pr-4">
-                            <Button type="submit" onClick={form.handleSubmit(onSubmit)} disabled={isLoading}>
-                                {isLoading ? (
-                                    <div className="flex items-center gap-2">
-                                        <Loader2 className="animate-spin" />
-                                        Salvando...
-                                    </div>
-                                ) : (
-                                    'Salvar'
-                                )}
-                            </Button>
-                    </DialogFooter>
-
-                </form>
-                </Form>
-            </DialogContent>
-        </Dialog>
-        </div>
-    )
+                  ) : (
+                    "Salvar"
+                  )}
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
 }

@@ -1,28 +1,35 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { QueryParamsProjects, ProjectApi } from ".";
-import { UpdateProjectData } from "../../types";
+import { CreateProjectData, UpdateProjectData } from "../../types";
+
+export function useCreateProject() {
+  return useMutation({
+    mutationFn: (createProjectData: CreateProjectData) =>
+      ProjectApi.createProject(createProjectData),
+  });
+}
 
 export function useListRestaurants() {
   return useQuery({
-    queryKey: ['projects'],
+    queryKey: ["projects"],
     queryFn: async () => ProjectApi.listAllProjects(),
-    retry: false
+    retry: false,
   });
 }
 
 export function useFilterRestaurants(query: QueryParamsProjects) {
   return useQuery({
-    queryKey: ['projects'],
+    queryKey: ["projects"],
     queryFn: async () => ProjectApi.listAllProjects(query),
-    enabled: true
+    enabled: true,
   });
 }
 
 export function useGetRestaurant(id: string) {
   return useQuery({
-    queryKey: ['project', id],
+    queryKey: ["project", id],
     queryFn: async () => ProjectApi.getProjectById(id),
-    enabled: true
+    enabled: true,
   });
 }
 

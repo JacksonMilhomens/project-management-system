@@ -1,30 +1,37 @@
-
 import { api } from "..";
-import { Project, UpdateProjectData } from "../../types";
+import { Project, UpdateProjectData, CreateProjectData } from "../../types";
 
-const prefix = '/project'
+const prefix = "/project";
 
 export interface QueryParamsProjects {
-  page?: number,
-  itemsPage: number,
+  page?: number;
+  itemsPage: number;
 }
 
 export const ProjectApi = {
-  async listAllProjects(search?: QueryParamsProjects): Promise<Project[]>{
-    const { data } = await api.get(`${prefix}`, { params: search })
+  async createProject(createProjectData: CreateProjectData): Promise<void> {
+    const { data } = await api.post(`${prefix}`, createProjectData);
+    return data;
+  },
+
+  async listAllProjects(search?: QueryParamsProjects): Promise<Project[]> {
+    const { data } = await api.get(`${prefix}`, { params: search });
     return data.projects;
   },
 
-  async getProjectById(id: string): Promise<Project>{
-    const { data } = await api.get(`${prefix}/${id}`)
+  async getProjectById(id: string): Promise<Project> {
+    const { data } = await api.get(`${prefix}/${id}`);
     return data;
   },
-  
-  async updateProject(id: string, data: UpdateProjectData): Promise<void> {
-    await api.put(`${prefix}/${id}`, data);
+
+  async updateProject(
+    id: string,
+    updateProjectData: UpdateProjectData
+  ): Promise<void> {
+    await api.put(`${prefix}/${id}`, updateProjectData);
   },
 
-  async deleteProject(id: string): Promise<void>{
-    await api.delete(`${prefix}/${id}`)
+  async deleteProject(id: string): Promise<void> {
+    await api.delete(`${prefix}/${id}`);
   },
-}
+};
